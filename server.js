@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -9,19 +10,19 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Health check
+// Use environment variables for keys
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'PVC Cart Backend is running!' });
 });
 
-// Create order endpoint
 app.post('/api/create-order', async (req, res) => {
   try {
     const { amount } = req.body;
-    const razorpay = new Razorpay({
-      key_id: 'rzp_test_SUjhXzhJkOIRD5',
-      key_secret: 'T8zSTX7wQeqSvjfJmUBD1Tsh'
-    });
     
     const options = {
       amount: Math.round(amount * 100),
@@ -37,13 +38,14 @@ app.post('/api/create-order', async (req, res) => {
   }
 });
 
-// Verify payment endpoint
 app.post('/api/verify-payment', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    const secret = 'T8zSTX7wQeqSvjfJmUBD1Tsh';
     const body = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSignature = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
     
     if (expectedSignature === razorpay_signature) {
       res.json({ success: true });
