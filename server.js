@@ -1,7 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import Razorpay from 'razorpay';
-import crypto from 'crypto';
+const express = require('express');
+const cors = require('cors');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
